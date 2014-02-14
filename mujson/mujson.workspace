@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeLite_Workspace Name="mujson" Database="/mnt/3CE6799F208B305A/mujson/mujson/.codelite/mujson.tags">
+  <Project Name="test" Path="test.project" Active="No"/>
+  <Project Name="testcpp" Path="testcpp.project" Active="Yes"/>
+  <BuildMatrix>
+    <WorkspaceConfiguration Name="Debug" Selected="yes">
+      <Project Name="test" ConfigName="Debug"/>
+      <Project Name="testcpp" ConfigName="Debug"/>
+    </WorkspaceConfiguration>
+    <WorkspaceConfiguration Name="Release" Selected="yes">
+      <Project Name="test" ConfigName="Release"/>
+      <Project Name="testcpp" ConfigName="Release"/>
+    </WorkspaceConfiguration>
+  </BuildMatrix>
+</CodeLite_Workspace>

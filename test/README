@@ -1,0 +1,6 @@
+These test cases are from 
+YAIL ( https://github.com/lloyd/yajl/ )
+and
+json-parser ( https://github.com/udp/json-parser/ )
+
+Please also read COPYING.YAJL and COPYING.json-parser
