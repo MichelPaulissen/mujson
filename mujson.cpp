@@ -27,7 +27,7 @@ bool muj_peek_byte(muj_source source, char* byte)
 
 }
 
-namespace Json
+namespace MUJSON_NAMESPACE
 {
 	
 Reader::Reader()

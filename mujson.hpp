@@ -25,7 +25,11 @@ extern bool muj_peek_byte(muj_source source, char* byte);
 
 } // extern "C"
 
-namespace Json
+#ifndef MUJSON_NAMESPACE
+#define MUJSON_NAMESPACE Json
+#endif
+
+namespace MUJSON_NAMESPACE
 {
 	
 class Value;
@@ -126,4 +130,4 @@ private:
 	DocumentContainer* document;
 };
 
-}
+} // MUJSON_NAMESPACE

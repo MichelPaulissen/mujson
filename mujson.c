@@ -434,7 +434,7 @@ void muj_phase1_value_object(muj_source source, muj_compressed_json target)
 			default:
 			{
 				printf("Unexpected byte: %d\n", (int)byte);
-				MUJ_PROBLEM("Unexpected data in phase 1.\n");
+				MUJ_PROBLEM("Unexpected data in phase 1. (Expected object continuation)\n");
 			}
 		}
 	}
@@ -468,7 +468,7 @@ void muj_phase1_value_array(muj_source source, muj_compressed_json target)
 		else
 		{
 			printf("Unexpected byte: %d\n", byte);
-			MUJ_PROBLEM("Unexpected data in phase 1.\n");
+			MUJ_PROBLEM("Unexpected data in phase 1. (Expected array continuation)\n");
 		}
 	}
 }
@@ -1005,6 +1005,12 @@ MUJ_INDEX muj_find_value_of_key_in_object(MUJ_INDEX object, char* key, muj_docum
 	if (muj_is_object_empty(object, document))
 		return 0;
 	MUJ_INDEX child = object_get_first_child(object, document); // key
+	if (muj_compare_string(child, key, document))
+	{
+		if (skip_end(child+1, document.table)) // This should never happen if the data is correct
+			return 0;
+		return get_skip(child+1, document.table); // value
+	}
 	while(!skip_end(child+1, document.table))
 	{
 		child = get_skip(child+1, document.table); // value
