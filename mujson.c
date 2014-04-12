@@ -985,10 +985,13 @@ long muj_get_long(MUJ_INDEX number, muj_document document)
 	MUJSON_ASSERT(number < document.table.table_size_in_indices); 
 	MUJSON_ASSERT(muj_is_number(number, document)); 
 	size_t number_length = muj_get_reparsed_number_length_including_null(number, document); 
-	char number_string[number_length]; number_string[number_length-1] = 0; number_string[number_length-2] = 0; 
+	char* number_string = (char*)malloc(number_length);
+	number_string[number_length-1] = 0; number_string[number_length-2] = 0; 
 	char* str = (&document.json.json_target[document.table.table[number]]); 
 	muj_reparse_number(number_string, str);
-	return strtol(number_string, NULL, 10);
+	long out = strtol(number_string, NULL, 10);
+	free(number_string);
+	return out;
 }
 
 double muj_get_double(MUJ_INDEX number, muj_document document)
@@ -996,10 +999,13 @@ double muj_get_double(MUJ_INDEX number, muj_document document)
 	MUJSON_ASSERT(number < document.table.table_size_in_indices); 
 	MUJSON_ASSERT(muj_is_number(number, document)); 
 	size_t number_length = muj_get_reparsed_number_length_including_null(number, document); 
-	char number_string[number_length]; number_string[number_length-1] = 0; number_string[number_length-2] = 0; 
+	char* number_string = (char*)malloc(number_length);
+	number_string[number_length-1] = 0; number_string[number_length-2] = 0; 
 	char* str = (&document.json.json_target[document.table.table[number]]); 
 	muj_reparse_number(number_string, str);
-	return strtod(number_string, NULL);
+	double out = strtod(number_string, NULL);
+	free(number_string);
+	return out;
 }
 
 MUJ_INDEX muj_find_value_of_key_in_object(MUJ_INDEX object, char* key, muj_document document)
