@@ -13,14 +13,14 @@ CurrentFileName        :=
 CurrentFilePath        :=
 CurrentFileFullPath    :=
 User                   :=Michel Paulissen
-Date                   :=03/11/14
+Date                   :=04/12/14
 CodeLitePath           :="/home/michel/.codelite"
-LinkerName             :=gcc
-SharedObjectLinkerName :=gcc -shared -fPIC
+LinkerName             :=clang
+SharedObjectLinkerName :=clang -shared -fPIC
 ObjectSuffix           :=.o
-DependSuffix           :=.o.d
+DependSuffix           :=
 PreprocessSuffix       :=.o.i
-DebugSwitch            :=-g 
+DebugSwitch            :=-gstab
 IncludeSwitch          :=-I
 LibrarySwitch          :=-l
 OutputSwitch           :=-o 
@@ -48,12 +48,12 @@ LibPath                := $(LibraryPathSwitch).
 ## AR, CXX, CC, AS, CXXFLAGS and CFLAGS can be overriden using an environment variables
 ##
 AR       := ar rcus
-CXX      := gcc
-CC       := gcc
+CXX      := clang++
+CC       := clang
 CXXFLAGS :=  -g -O0 -Wall -Werror -Wno-unused-function $(Preprocessors)
-CFLAGS   :=  -g -O0 -Wall -Werror -Wno-unused-function -fbounds-check -std=c99 $(Preprocessors)
+CFLAGS   :=  -g -O0 -Weverything -Werror -Wno-unused-function -std=c99 -Wno-missing-variable-declarations -Wno-missing-prototypes -Wno-cast-align  $(Preprocessors)
 ASFLAGS  := 
-AS       := as
+AS       := llvm-as
 
 
 ##
@@ -87,24 +87,16 @@ PreBuild:
 ##
 ## Objects
 ##
-$(IntermediateDirectory)/mujson_test$(ObjectSuffix): ../test.c $(IntermediateDirectory)/mujson_test$(DependSuffix)
+$(IntermediateDirectory)/mujson_test$(ObjectSuffix): ../test.c 
 	$(CC) $(SourceSwitch) "/mnt/3CE6799F208B305A/mujson/test.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/mujson_test$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/mujson_test$(DependSuffix): ../test.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mujson_test$(ObjectSuffix) -MF$(IntermediateDirectory)/mujson_test$(DependSuffix) -MM "../test.c"
-
 $(IntermediateDirectory)/mujson_test$(PreprocessSuffix): ../test.c
 	@$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mujson_test$(PreprocessSuffix) "../test.c"
 
-$(IntermediateDirectory)/mujson_mujson$(ObjectSuffix): ../mujson.c $(IntermediateDirectory)/mujson_mujson$(DependSuffix)
+$(IntermediateDirectory)/mujson_mujson$(ObjectSuffix): ../mujson.c 
 	$(CC) $(SourceSwitch) "/mnt/3CE6799F208B305A/mujson/mujson.c" $(CFLAGS) $(ObjectSwitch)$(IntermediateDirectory)/mujson_mujson$(ObjectSuffix) $(IncludePath)
-$(IntermediateDirectory)/mujson_mujson$(DependSuffix): ../mujson.c
-	@$(CC) $(CFLAGS) $(IncludePath) -MG -MP -MT$(IntermediateDirectory)/mujson_mujson$(ObjectSuffix) -MF$(IntermediateDirectory)/mujson_mujson$(DependSuffix) -MM "../mujson.c"
-
 $(IntermediateDirectory)/mujson_mujson$(PreprocessSuffix): ../mujson.c
 	@$(CC) $(CFLAGS) $(IncludePath) $(PreprocessOnlySwitch) $(OutputSwitch) $(IntermediateDirectory)/mujson_mujson$(PreprocessSuffix) "../mujson.c"
 
-
--include $(IntermediateDirectory)/*$(DependSuffix)
 ##
 ## Clean
 ##

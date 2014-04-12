@@ -44,8 +44,10 @@
 
 #define MUJSON_SINGLE_MALLOC
 
+extern const char* muj_problem_string;
 const char* muj_problem_string = 0;
 
+extern const char* muj_get_last_error(void);
 const char* muj_get_last_error()
 {
 	const char* last_error = muj_problem_string;
@@ -59,8 +61,10 @@ static jmp_buf problem_jmp_buf;
 muj_problem_string = string;\
 printf("mujson: Problem occured: %s", string);\
 longjmp(problem_jmp_buf, 1)
+#define POST_PROBLEM_IMPLIED(x)
 #else
 #define MUJ_PROBLEM(string) muj_problem_string = string; printf("mujson: Problem occured, bad things may happen: %s", string)
+#define POST_PROBLEM_IMPLIED(x) x
 #endif
 
 muj_document muj_make_document(muj_compressed_json json, muj_document_table table)
@@ -73,11 +77,12 @@ muj_document muj_make_document(muj_compressed_json json, muj_document_table tabl
 
 #ifndef MUJSON_NO_HIGH_LEVEL_FUNCTIONS
 
-unsigned int file_size(FILE* f)
+extern long file_size(FILE* f);
+long file_size(FILE* f)
 {
-	unsigned int pos = ftell(f);
+	long pos = ftell(f);
 	fseek(f, 0, SEEK_END);
-	unsigned int end = ftell(f);
+	long end = ftell(f);
 	fseek(f, pos, SEEK_SET);
 	
 	return end;
@@ -85,8 +90,8 @@ unsigned int file_size(FILE* f)
 
 muj_document muj_load_document_from_file(FILE* f)
 {
-	size_t original_json_size = file_size(f);
-	muj_compressed_json target = muj_allocate_compressed_json(original_json_size);
+	long original_json_size = file_size(f);
+	muj_compressed_json target = muj_allocate_compressed_json((size_t)original_json_size);
 	muj_source source;
 	source.file = f;
 	muj_phase1(source, target);
@@ -209,8 +214,7 @@ void push_byte_to_target(muj_compressed_json target, char byte)
 void muj_phase1_value_constant(muj_source source, muj_compressed_json target)
 {
 	char byte = 0;
-	bool success = muj_read_byte(source, &byte);
-	if (success)
+	if (muj_read_byte(source, &byte))
 	{
 		push_byte_to_target(target, byte);
 		for(int i=1; i<4; i++)
@@ -249,8 +253,7 @@ void skip_string(muj_source source, muj_compressed_json target)
 				break;
 			else if (byte == '\\')
 			{
-				bool success = muj_read_byte(source, &byte);
-				if (success)
+				if (muj_read_byte(source, &byte))
 				{
 					push_byte_to_target(target, byte);
 				}
@@ -265,7 +268,7 @@ void skip_string(muj_source source, muj_compressed_json target)
 FAIL_STRING_SKIPPPING:
 			printf("Failed reading byte (EOF?)\n");
 			MUJ_PROBLEM("EOF in string parsing.\n");
-			break;
+			POST_PROBLEM_IMPLIED(break);
 		}
 	}
 }
@@ -304,7 +307,7 @@ void skip_number(muj_source source, muj_compressed_json target)
 		{
 			printf("Failed reading byte (EOF?)\n");
 			MUJ_PROBLEM("EOF in number parsing.\n");
-			return;
+			POST_PROBLEM_IMPLIED(return);
 		}
 	}
 	bool byte_was_e = false;
@@ -366,7 +369,7 @@ void skip_number(muj_source source, muj_compressed_json target)
 SKIP_NUMBER_PEEK_FAILED:
 			printf("Failed reading byte (EOF?)\n");
 			MUJ_PROBLEM("EOF in number parsing.\n");
-			return;
+			POST_PROBLEM_IMPLIED(return);
 		}
 	}
 }
@@ -527,7 +530,8 @@ muj_document_table muj_allocate_document_table(muj_compressed_json what_for)
 	out.current_write_pos = MUJSON_MALLOC(sizeof(size_t));
 #endif
 	out.table_size_in_indices = out.table!=0?indices:0;
-	*out.current_write_pos = 0;
+	if (out.current_write_pos)
+		*out.current_write_pos = 0;
 	return out;
 }
 
@@ -541,13 +545,13 @@ void muj_free_document_table(muj_document_table table)
 
 MUJ_INDEX muj_push_index_to_table(muj_document_table table, MUJ_INDEX index)
 {
-	size_t pos = (*table.current_write_pos);
+	MUJ_INDEX pos = (MUJ_INDEX)(*table.current_write_pos);
 	if (pos >= table.table_size_in_indices)
 	{
 		printf("Table size: %d\n", (int)table.table_size_in_indices);
 		printf("Write attempt: %d\n", (int)(*table.current_write_pos));
 		MUJ_PROBLEM("Table not large enough.\n");
-		return pos;
+		POST_PROBLEM_IMPLIED(return pos);
 	}
 	else
 	{
@@ -583,7 +587,7 @@ char peek_json_byte(muj_compressed_json json)
 		printf("Compressed JSON size: %d\n", (int)json.json_max_size);
 		printf("Peek attempt: %d\n", (int)(*json.json_read_pos));
 		MUJ_PROBLEM("Peek would cause a segfault.\n");
-		return 0;
+		POST_PROBLEM_IMPLIED(return 0);
 	}
 	else
 	{
@@ -598,7 +602,7 @@ char read_json_byte(muj_compressed_json json)
 		printf("Compressed JSON size: %d\n", (int)json.json_max_size);
 		printf("Read attempt: %d\n", (int)(*json.json_read_pos));
 		MUJ_PROBLEM("Read would cause a segfault.\n");
-		return 0;
+		POST_PROBLEM_IMPLIED(return 0);
 	}
 	else
 	{

@@ -89,7 +89,7 @@ static bool muj_read_byte(muj_source source, char* byte)
 	int c = getc(source.file);
 	if (c != EOF)
 	{
-		*byte = c;
+		*byte = (char)c;
 		return true;
 	}
 	return false;
