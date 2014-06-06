@@ -404,6 +404,7 @@ void muj_phase1_value_object(muj_source source, muj_compressed_json target)
 	char byte = 0;
 	muj_expect_byte(source, '{'); // '{'
 	push_byte_to_target(target, '{');
+	
 	bool in_object = true;
 	while(in_object)
 	{
@@ -448,6 +449,18 @@ void muj_phase1_value_array(muj_source source, muj_compressed_json target)
 	char byte = 0;
 	muj_expect_byte(source, '['); // '['
 	push_byte_to_target(target, '[');
+	
+	skip_whitespace(source);
+	
+	char early_out;
+	muj_peek_byte(source, &early_out);
+	if (early_out == ']')
+	{
+		muj_expect_byte(source, ']');
+		push_byte_to_target(target, ']');
+		return;
+	}
+	
 	bool in_array = true;
 	while(in_array)
 	{
