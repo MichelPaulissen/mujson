@@ -7,7 +7,7 @@
 #ifndef MUJSON_NO_HIGH_LEVEL_FUNCTIONS
 #include <stdio.h>
 #else
-#error smgoomfs
+// #warning MUJSON_NO_HIGH_LEVEL_FUNCTIONS defined
 #endif
 
 #ifdef MUJSON_USE_CPP_INTERFACE
@@ -140,5 +140,10 @@ muj_document muj_make_document(muj_compressed_json json, muj_document_table tabl
 
 void muj_phase1(muj_source source, muj_compressed_json target);
 void muj_phase2( muj_document document);
+
+// Generic usage functions
+char* muj_alloc_string_copy_target(MUJ_INDEX string, muj_document document);
+char* muj_alloc_string_copy_target_and_copy(MUJ_INDEX string, muj_document document);
+void muj_free_string_copy_target(char* string);
 
 #endif // MUJSON_H_INCLUDED

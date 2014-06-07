@@ -1,6 +1,7 @@
 #include <mujson.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <assert.h>
 
@@ -142,7 +143,7 @@ bool is_whitespace(char byte)
 void skip_whitespace(muj_source source)
 {
 	char byte;
-	while(true)
+    for(;;)
 	{
 		bool success = muj_peek_byte(source, &byte);
 		if (!success)
@@ -243,7 +244,7 @@ void skip_string(muj_source source, muj_compressed_json target)
 	char byte = 0;
 	muj_expect_byte(source, '"'); // '"'
 	push_byte_to_target(target, '"');
-	while(true)
+    for(;;)
 	{
 		bool success = muj_read_byte(source, &byte);
 		if (success)
@@ -311,7 +312,7 @@ void skip_number(muj_source source, muj_compressed_json target)
 		}
 	}
 	bool byte_was_e = false;
-	while(true)
+    for(;;)
 	{
 		bool success = muj_peek_byte(source, &byte);
 		if (success)
@@ -576,7 +577,7 @@ MUJ_INDEX muj_push_index_to_table(muj_document_table table, MUJ_INDEX index)
 
 MUJ_INDEX muj_push_current_index_to_table(muj_document document)
 {
-	return muj_push_index_to_table(document.table, *document.json.json_read_pos);
+    return muj_push_index_to_table(document.table, (MUJ_INDEX)*document.json.json_read_pos);
 }
 
 void muj_replace_index_in_table(muj_document_table table, MUJ_INDEX pos_in_table, MUJ_INDEX new_index)
@@ -633,7 +634,7 @@ void muj_phase2_value_constant(muj_document document)
 void muj_phase2_skip_string(muj_document document)
 {
 	read_json_byte(document.json);
-	while(true)
+    for(;;)
 	{
 		char byte = read_json_byte(document.json);
 		if (byte == '"')
@@ -649,7 +650,7 @@ void muj_phase2_skip_number(muj_document document)
 {
 	read_json_byte(document.json);
 	bool byte_was_e = false;
-	while(true)
+    for(;;)
 	{
 		char byte = peek_json_byte(document.json);
 		if (!isByteNumber(byte, byte_was_e))
@@ -694,7 +695,7 @@ void muj_phase2_value_object(muj_document document)
 				muj_push_current_index_to_table(document);
 				MUJ_INDEX skip_replace_me_after = muj_push_current_index_to_table(document);
 				muj_phase2_key(document);
-				muj_replace_index_in_table(document.table, skip_replace_me_after, *document.table.current_write_pos);
+                muj_replace_index_in_table(document.table, skip_replace_me_after, (MUJ_INDEX)*document.table.current_write_pos);
 				muj_push_current_index_to_table(document);
 				skip_replace_me_after = muj_push_current_index_to_table(document);
 				muj_phase2_value(document);
@@ -702,7 +703,7 @@ void muj_phase2_value_object(muj_document document)
 				if (end_peek == '}')
 					muj_replace_index_in_table(document.table, skip_replace_me_after, 0);
 				else
-					muj_replace_index_in_table(document.table, skip_replace_me_after, *document.table.current_write_pos);
+                    muj_replace_index_in_table(document.table, skip_replace_me_after, (MUJ_INDEX)*document.table.current_write_pos);
 				break;
 			}
 			default:
@@ -735,7 +736,7 @@ void muj_phase2_value_array(muj_document document)
 			if (end_peek == ']')
 				muj_replace_index_in_table(document.table, skip_replace_me_after, 0);
 			else
-				muj_replace_index_in_table(document.table, skip_replace_me_after, *document.table.current_write_pos);
+                muj_replace_index_in_table(document.table, skip_replace_me_after, (MUJ_INDEX)*document.table.current_write_pos);
 		}
 	}
 }
@@ -962,7 +963,7 @@ size_t muj_get_reparsed_number_length_including_null(MUJ_INDEX number, muj_docum
 	MUJSON_ASSERT(number < document.table.table_size_in_indices);
 	MUJSON_ASSERT(muj_is_number(number, document));
 	char* str = (&document.json.json_target[document.table.table[number]]);
-	for( int l=0; true; l++)
+    for( int l=0;; l++)
 	{
 		if (!isByteNumber(str[l], l==0))
 			return l + 2; // 1 for expansion of 'e' and 1 for \0
@@ -971,7 +972,7 @@ size_t muj_get_reparsed_number_length_including_null(MUJ_INDEX number, muj_docum
 
 void muj_reparse_number(char* target, char* str)
 {
-	for(int i=0; true; i++)
+    for(int i=0;; i++)
 	{
 		char byte = str[i];
 		if (isByteNumber(byte, i == 0))
@@ -1023,11 +1024,14 @@ double muj_get_double(MUJ_INDEX number, muj_document document)
 
 MUJ_INDEX muj_find_value_of_key_in_object(MUJ_INDEX object, char* key, muj_document document)
 {
+    MUJ_INDEX child;
+
 	MUJSON_ASSERT(object < document.table.table_size_in_indices);
 	MUJSON_ASSERT(muj_is_object(object, document));
 	if (muj_is_object_empty(object, document))
 		return 0;
-	MUJ_INDEX child = object_get_first_child(object, document); // key
+
+    child = object_get_first_child(object, document); // key
 	if (muj_compare_string(child, key, document))
 	{
 		if (skip_end(child+1, document.table)) // This should never happen if the data is correct
@@ -1053,11 +1057,13 @@ MUJ_INDEX muj_find_value_of_key_in_object(MUJ_INDEX object, char* key, muj_docum
 
 size_t muj_object_count_number_of_children(MUJ_INDEX object, muj_document document)
 {
+    MUJ_INDEX child;
+
 	MUJSON_ASSERT(object < document.table.table_size_in_indices);
 	MUJSON_ASSERT(muj_is_object(object, document));
 	if (muj_is_object_empty(object, document))
 		return 0;
-	MUJ_INDEX child = object_get_first_child(object, document);
+    child = object_get_first_child(object, document);
 	size_t numChildren = 1;
 	while(!skip_end(child+1, document.table))
 	{
@@ -1070,11 +1076,13 @@ size_t muj_object_count_number_of_children(MUJ_INDEX object, muj_document docume
 
 size_t muj_array_count_number_of_elements(MUJ_INDEX array, muj_document document)
 {
+    MUJ_INDEX child;
+
 	MUJSON_ASSERT(array < document.table.table_size_in_indices);
 	MUJSON_ASSERT(muj_is_array(array, document));
 	if (muj_is_array_empty(array, document))
 		return 0;
-	MUJ_INDEX child = array_get_first_child(array, document);
+    child = array_get_first_child(array, document);
 	size_t numChildren = 1;
 	while(!skip_end(child+1, document.table))
 	{
@@ -1086,14 +1094,17 @@ size_t muj_array_count_number_of_elements(MUJ_INDEX array, muj_document document
 
 MUJ_INDEX muj_get_element_from_array(MUJ_INDEX array, size_t index, muj_document document)
 {
+    MUJ_INDEX child;
+    size_t current;
+
 	MUJSON_ASSERT(array < document.table.table_size_in_indices);
 	MUJSON_ASSERT(muj_is_array(array, document));
 	if (muj_is_array_empty(array, document))
 		return 0;
-	MUJ_INDEX child = array_get_first_child(array, document);
+    child = array_get_first_child(array, document);
 	if (index == 0)
 		return child;
-	size_t current = 1;
+    current = 1;
 	while(!skip_end(child+1, document.table))
 	{
 		child = get_skip(child+1, document.table);
@@ -1106,12 +1117,14 @@ MUJ_INDEX muj_get_element_from_array(MUJ_INDEX array, size_t index, muj_document
 
 void muj_object_copy_children(muj_key_value_pair* children, MUJ_INDEX object, muj_document document)
 {
+    MUJ_INDEX child;
+
 	MUJSON_ASSERT(object < document.table.table_size_in_indices);
 	MUJSON_ASSERT(children);
 	MUJSON_ASSERT(muj_is_object(object, document));
 	if (muj_is_object_empty(object, document))
 		return;
-	MUJ_INDEX child = object_get_first_child(object, document);
+    child = object_get_first_child(object, document);
 	(*children).key = child;
 	MUJSON_ASSERT(muj_is_string((*children).key, document));
 	(*children).value = child+2;
@@ -1146,6 +1159,27 @@ MUJ_INDEX muj_get_root_object(muj_document_table table)
 {
 	MUJ_UNUSED(table);
 	return 0;
+}
+
+char* muj_alloc_string_copy_target(MUJ_INDEX string, muj_document document)
+{
+    size_t s = muj_get_string_length(string, document);
+    char* out = MUJSON_MALLOC(s);
+    out[s-1] = 0;
+    return out;
+}
+
+char* muj_alloc_string_copy_target_and_copy(MUJ_INDEX string, muj_document document)
+{
+    char* out = muj_alloc_string_copy_target(string, document);
+    muj_copy_string(out, string, document);
+    return out;
+}
+
+
+void muj_free_string_copy_target(char* string)
+{
+    MUJSON_FREE(string);
 }
 
 #if 0
